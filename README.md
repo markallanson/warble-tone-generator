@@ -1,5 +1,7 @@
 # Warble Tone Generator
 
+**👉 Try it online at <https://warble.allanson.org>** — no install required.
+
 A browser-based **warble tone generator** for sound-field audiometry, built with the
 Web Audio API. It produces a frequency-modulated pure tone whose frequency sweeps
 back and forth around a center frequency to minimize standing-wave effects in a room.
@@ -25,9 +27,8 @@ another family prepare the same way.
 
 ## Usage
 
-**👉 Try it online at <https://warble.allanson.org>** — no install required.
-
-Or run it locally by opening [`index.html`](index.html) directly in a web browser — double-click it, or use:
+Open the hosted app at <https://warble.allanson.org>, or run it locally by opening
+[`index.html`](index.html) directly in a web browser — double-click it, or use:
 ```bash
 # Option A: just open the file
 xdg-open index.html      # Linux
