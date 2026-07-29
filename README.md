@@ -6,6 +6,14 @@ back and forth around a center frequency to minimize standing-wave effects in a 
 
 A single, dependency-free `index.html` — no build step, no server, no install.
 
+## A personal note
+
+This tool has a personal origin. I built it while helping my 3-year-old get
+comfortable responding to warble tones ahead of an audiometry test - letting them
+press the button and hear the familiar sound at home took the mystery
+(and a lot of the nerves) out of the clinic visit. I'm sharing it in case it helps
+another family prepare the same way.
+
 ## Features
 
 - **Center Frequency** — adjustable from 125 Hz to 8000 Hz
