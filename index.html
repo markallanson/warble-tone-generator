@@ -3,147 +3,468 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Warble Tone Generator for Audiometry</title>
+    <title>Warble Tone Generator — mark.allanson.org</title>
+
+    <!-- Fonts: JetBrains Mono (body) + Space Grotesk (headers), matching the apollo theme -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <!-- Set theme class before paint to avoid a flash (mirrors apollo's themetoggle.js) -->
+    <script>
+        (function () {
+            var t = localStorage.getItem('theme-storage');
+            if (!t) {
+                t = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+            }
+            document.documentElement.classList.add(t);
+        })();
+    </script>
+
     <style>
+        :root {
+            --text-font: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+            --header-font: 'Space Grotesk', Helvetica, Arial, sans-serif;
+        }
+
+        /* Light theme (default) */
+        :root,
+        :root.light {
+            --bg-0: #ffffff;
+            --bg-1: #fafafa;
+            --bg-2: #e6e6e6;
+            --text-0: #151515;
+            --text-1: #666666;
+            --border-color: var(--bg-2);
+            --primary-color: #ef5350;
+            --hover-color: #ffffff;
+        }
+
+        /* Dark theme */
+        :root.dark {
+            --bg-0: #121212;
+            --bg-1: #1c1c1c;
+            --bg-2: #2e2e2e;
+            --text-0: #ededed;
+            --text-1: #9a9a9a;
+            --border-color: var(--bg-2);
+            --primary-color: #ef5350;
+            --hover-color: #ffffff;
+        }
+
+        html {
+            background-color: var(--bg-0);
+            color: var(--text-0);
+            font-family: var(--text-font);
+            line-height: 1.6em;
+            -webkit-font-smoothing: antialiased;
+        }
+
         body {
-            font-family: Arial, sans-serif;
-            max-width: 600px;
-            margin: 50px auto;
-            padding: 20px;
-            background-color: #f5f5f5;
+            margin: 0;
         }
-        .container {
-            background: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+
+        .content {
+            max-width: 760px;
+            margin: 0 auto;
+            padding: 0 24px 64px;
+            word-wrap: break-word;
         }
-        h1 {
-            color: #333;
-            text-align: center;
+
+        ::selection {
+            background: var(--primary-color);
+            color: var(--hover-color);
         }
-        .control-group {
-            margin: 20px 0;
+
+        /* ---- Header / nav (apollo) ---- */
+        header {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1em 0;
+            gap: 12px;
         }
-        label {
+
+        header .main {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            font-size: 1.1rem;
+        }
+
+        .logo {
+            font-family: var(--header-font);
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+
+        .socials {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .social {
+            padding: 2px;
+            display: inline-flex;
+        }
+
+        .social svg {
+            width: 18px;
+            height: 18px;
+            fill: currentColor;
             display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-            color: #555;
         }
-        input[type="range"] {
-            width: 100%;
-            margin: 10px 0;
+
+        nav {
+            display: flex;
+            align-items: center;
+            gap: 0.5em;
         }
-        .value-display {
-            text-align: center;
-            font-size: 18px;
-            color: #2c3e50;
-            margin: 5px 0;
+
+        nav a {
+            margin-left: 0.15em;
         }
-        button {
-            width: 100%;
-            padding: 15px;
-            font-size: 18px;
+
+        #dark-mode-toggle {
+            background: transparent;
             border: none;
-            border-radius: 5px;
             cursor: pointer;
-            margin: 10px 0;
-            transition: background-color 0.3s;
+            color: var(--text-0);
+            padding: 4px;
+            display: inline-flex;
+            align-items: center;
         }
-        .start-btn {
-            background-color: #27ae60;
-            color: white;
+
+        #dark-mode-toggle svg {
+            width: 18px;
+            height: 18px;
+            fill: none;
+            stroke: currentColor;
         }
-        .start-btn:hover {
-            background-color: #229954;
+
+        /* ---- Links: signature red underline that inverts on hover ---- */
+        a {
+            color: inherit;
+            text-decoration: none;
+            border-bottom: 3px solid var(--primary-color);
+            position: relative;
+            z-index: 1;
         }
-        .stop-btn {
-            background-color: #e74c3c;
-            color: white;
+
+        a:hover {
+            background-color: var(--primary-color);
+            color: var(--hover-color);
         }
-        .stop-btn:hover {
-            background-color: #c0392b;
+
+        /* Elements that should keep the look but not the hover-fill */
+        .logo,
+        #dark-mode-toggle,
+        .social {
+            border-bottom: none;
         }
-        .stop-btn:disabled {
-            background-color: #95a5a6;
-            cursor: not-allowed;
+
+        .logo:hover,
+        #dark-mode-toggle:hover,
+        .social:hover {
+            background-color: transparent;
         }
-        .info {
-            background-color: #e8f4f8;
-            padding: 15px;
-            border-radius: 5px;
-            margin-top: 20px;
-            font-size: 14px;
-            color: #555;
+
+        .social:hover {
+            color: var(--primary-color);
         }
-        .personal-note {
-            background-color: #fdeef4;
-            border: 1px solid #f4c2d7;
-            padding: 15px;
-            border-radius: 5px;
-            margin-top: 15px;
-            font-size: 14px;
-            color: #6a4a55;
+
+        /* ---- Headings: apollo's "# " prefix in primary color ---- */
+        h1,
+        h2,
+        h3 {
+            font-family: var(--header-font);
+            font-weight: 700;
+            line-height: 1.1;
+        }
+
+        h1.page-header {
+            font-size: 2.5em;
+            margin: 3rem 0 1rem;
+        }
+
+        h1::before {
+            color: var(--primary-color);
+            content: "# ";
+        }
+
+        h2 {
+            font-size: 1.3rem;
+            margin-top: 2em;
+        }
+
+        h2::before {
+            color: var(--primary-color);
+            content: "## ";
+        }
+
+        /* ---- Callouts (apollo "note" style: red left border) ---- */
+        .callout {
+            border-left: 3px solid var(--primary-color);
+            background: var(--bg-1);
+            padding: 12px 16px;
+            margin: 18px 0;
+            font-size: 0.9rem;
+            color: var(--text-1);
+            border-radius: 0 4px 4px 0;
             line-height: 1.5;
         }
-        .warning {
-            background-color: #fff3cd;
-            border: 1px solid #ffc107;
-            padding: 10px;
-            border-radius: 5px;
-            margin-bottom: 20px;
-            color: #856404;
+
+        .callout strong {
+            color: var(--text-0);
+        }
+
+        /* ---- Controls ---- */
+        .control-group {
+            margin: 22px 0;
+        }
+
+        .control-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            font-size: 0.95rem;
+        }
+
+        .control-label label {
+            font-weight: 700;
+            color: var(--text-0);
+            cursor: pointer;
+        }
+
+        .value-display {
+            color: var(--primary-color);
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 4px;
+            background: var(--bg-2);
+            border-radius: 2px;
+            outline: none;
+            margin-top: 10px;
+            cursor: pointer;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            border: none;
+            cursor: pointer;
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            border: none;
+            border-radius: 50%;
+            background: var(--primary-color);
+            cursor: pointer;
+        }
+
+        input[type="range"]::-moz-range-track {
+            height: 4px;
+            background: var(--bg-2);
+            border-radius: 2px;
+        }
+
+        input[type="range"]:focus-visible {
+            outline: 2px solid var(--primary-color);
+            outline-offset: 6px;
+        }
+
+        /* ---- Buttons (apollo link-button: red underline, invert on hover) ---- */
+        .button-row {
+            display: flex;
+            gap: 12px;
+            margin: 18px 0 8px;
+        }
+
+        .btn {
+            font-family: var(--text-font);
+            font-size: 1rem;
+            font-weight: 700;
+            padding: 14px;
+            background: transparent;
+            color: var(--text-0);
+            border: none;
+            border-bottom: 3px solid var(--primary-color);
+            cursor: pointer;
+            transition: background-color 0.15s ease, color 0.15s ease;
+        }
+
+        #toggleBtn {
+            flex: 1;
+        }
+
+        #resetBtn {
+            flex: 0 0 auto;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-color);
+            color: var(--hover-color);
+        }
+
+        .btn.stop-btn {
+            background-color: var(--primary-color);
+            color: var(--hover-color);
+        }
+
+        /* ---- Footer ---- */
+        footer {
+            margin-top: 3rem;
+            padding-top: 1em;
+            border-top: 3px solid var(--border-color);
+            font-size: 0.85rem;
+            color: var(--text-1);
+        }
+
+        @media (max-width: 600px) {
+            header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Warble Tone Generator</h1>
-        
-        <div class="warning">
+    <div class="content">
+        <header>
+            <div class="main">
+                <a class="logo" href="https://mark.allanson.org">mark.allanson.org</a>
+                <div class="socials">
+                    <a class="social" rel="me" href="https://github.com/markallanson" title="GitHub" aria-label="GitHub">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+                    </a>
+                    <a class="social" rel="me" href="https://hachyderm.io/@markallanson" title="Mastodon" aria-label="Mastodon">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M433 179.11c0-97.2-63.71-125.7-63.71-125.7-62.52-28.7-228.56-28.4-290.48 0 0 0-63.72 28.5-63.72 125.7 0 115.7-6.6 259.4 105.63 289.1 40.51 10.7 75.32 13 103.33 11.4 50.81-2.8 79.32-18.1 79.32-18.1l-1.7-36.9s-36.31 11.4-77.12 10.1c-40.41-1.4-83-4.4-89.63-54a102.54 102.54 0 0 1-.9-13.9c85.63 20.9 158.65 9.1 178.75 6.7 56.12-6.7 105-41.3 111.23-72.9 9.8-49.8 9-121.5 9-121.5zm-75.12 125.2h-46.63v-114.2c0-49.7-64-51.6-64 6.9v62.5h-46.33V197c0-58.5-64-56.6-64-6.9v114.2H90.19c0-122.1-5.2-147.9 18.41-175 25.9-28.9 79.82-30.8 103.83 6.1l11.6 19.5 11.6-19.5c24.11-37.1 78.12-34.8 103.83-6.1 23.71 27.3 18.4 53 18.4 175z"/></svg>
+                    </a>
+                    <a class="social" rel="me" href="http://uk.linkedin.com/in/markallanson" title="LinkedIn" aria-label="LinkedIn">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M416 32H31.9C14.3 32 0 46.5 0 64.3v383.4C0 465.5 14.3 480 31.9 480H416c17.6 0 32-14.5 32-32.3V64.3c0-17.8-14.4-32.3-32-32.3zM135.4 416H69V202.2h66.5V416zm-33.2-243c-21.3 0-38.5-17.3-38.5-38.5S80.9 96 102.2 96c21.2 0 38.5 17.3 38.5 38.5 0 21.3-17.2 38.5-38.5 38.5zm282.1 243h-66.4V312c0-24.8-.5-56.7-34.5-56.7-34.6 0-39.9 27-39.9 54.9V416h-66.4V202.2h63.7v29.2h.9c8.9-16.8 30.6-34.5 62.9-34.5 67.2 0 79.7 44.3 79.7 101.9V416z"/></svg>
+                    </a>
+                    <a class="social" rel="me" href="mailto:mark@allanson.org" title="Email" aria-label="Email">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M48 64C21.5 64 0 85.5 0 112c0 15.1 7.1 29.3 19.2 38.4L236.8 313.6c11.4 8.5 27 8.5 38.4 0L492.8 150.4c12.1-9.1 19.2-23.3 19.2-38.4 0-26.5-21.5-48-48-48H48zM0 176V384c0 35.3 28.7 64 64 64H448c35.3 0 64-28.7 64-64V176L294.4 339.2c-22.8 17.1-54 17.1-76.8 0L0 176z"/></svg>
+                    </a>
+                </div>
+            </div>
+            <nav>
+                <a href="https://mark.allanson.org/">/Home</a>
+                <a href="https://mark.allanson.org/blog">/Blog</a>
+                <a href="https://mark.allanson.org/cv">/CV</a>
+                <button id="dark-mode-toggle" title="Toggle dark mode" aria-label="Toggle dark mode">
+                    <svg id="sun-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                    <svg id="moon-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                </button>
+            </nav>
+        </header>
+
+        <h1 class="page-header">Warble Tone Generator</h1>
+
+        <div class="callout">
             ⚠️ <strong>Warning:</strong> Use at safe volumes. Do not use for self-diagnosis. Clinical audiometry should be performed by qualified professionals.
         </div>
 
         <div class="control-group">
-            <label for="frequency">Center Frequency (Hz)</label>
+            <div class="control-label">
+                <label for="frequency">Center Frequency</label>
+                <span class="value-display" id="freqDisplay">1000 Hz</span>
+            </div>
             <input type="range" id="frequency" min="125" max="8000" value="1000" step="1">
-            <div class="value-display" id="freqDisplay">1000 Hz</div>
         </div>
 
         <div class="control-group">
-            <label for="modulationRate">Warble Rate (Hz)</label>
+            <div class="control-label">
+                <label for="modulationRate">Warble Rate</label>
+                <span class="value-display" id="modRateDisplay">5 Hz</span>
+            </div>
             <input type="range" id="modulationRate" min="3" max="10" value="5" step="0.5">
-            <div class="value-display" id="modRateDisplay">5 Hz</div>
         </div>
 
         <div class="control-group">
-            <label for="modulationDepth">Warble Depth (%)</label>
+            <div class="control-label">
+                <label for="modulationDepth">Warble Depth</label>
+                <span class="value-display" id="modDepthDisplay">15%</span>
+            </div>
             <input type="range" id="modulationDepth" min="5" max="25" value="15" step="1">
-            <div class="value-display" id="modDepthDisplay">15%</div>
         </div>
 
         <div class="control-group">
-            <label for="volume">Volume</label>
+            <div class="control-label">
+                <label for="volume">Volume</label>
+                <span class="value-display" id="volumeDisplay">30%</span>
+            </div>
             <input type="range" id="volume" min="0" max="100" value="30" step="1">
-            <div class="value-display" id="volumeDisplay">30%</div>
         </div>
 
-        <button class="start-btn" id="toggleBtn">▶ Start Warble Tone</button>
+        <div class="button-row">
+            <button class="btn" id="toggleBtn">▶ Start Warble Tone</button>
+            <button class="btn" id="resetBtn" title="Reset all controls to defaults">↺ Reset</button>
+        </div>
 
-        <div class="info">
+        <div class="callout">
             <strong>About Warble Tones:</strong><br>
-            Warble tones are frequency-modulated pure tones used in sound field audiometry. The frequency varies around a center frequency to minimize standing wave effects in the test environment. Typical warble rates are 4-6 Hz with modulation depths of 10-20%.
+            Warble tones are frequency-modulated pure tones used in sound field audiometry. The frequency varies around a center frequency to minimize standing wave effects in the test environment. Typical warble rates are 4–6 Hz with modulation depths of 10–20%.
         </div>
 
-        <div class="personal-note">
+        <div class="callout">
             <strong>A personal note:</strong><br>
             I made this little tool to help my 3-year-old get comfortable with warble
             tones ahead of an audiometry test. Letting them press the button and hear
-            the familiar sound at home took the mystery - and a lot of the
-            nerves - out of the clinic visit. Hoping it helps another family too.
+            the familiar sound at home took the mystery — and a lot of the
+            nerves — out of the clinic visit. Hoping it helps another family too.
         </div>
+
+        <footer>
+            <a href="https://mark.allanson.org">← back to mark.allanson.org</a>
+        </footer>
     </div>
+
+    <script>
+        // ---- Theme toggle (mirrors apollo's themetoggle.js) ----
+        function getSavedTheme() {
+            var t = localStorage.getItem('theme-storage');
+            if (!t) {
+                t = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+            }
+            return t;
+        }
+
+        function applyTheme(mode) {
+            var html = document.documentElement;
+            html.classList.remove('light', 'dark');
+            html.classList.add(mode);
+            var sun = document.getElementById('sun-icon');
+            var moon = document.getElementById('moon-icon');
+            if (sun && moon) {
+                sun.style.display = (mode === 'dark') ? 'inline-block' : 'none';
+                moon.style.display = (mode === 'light') ? 'inline-block' : 'none';
+            }
+        }
+
+        function toggleTheme() {
+            var next = getSavedTheme() === 'dark' ? 'light' : 'dark';
+            localStorage.setItem('theme-storage', next);
+            applyTheme(next);
+        }
+
+        applyTheme(getSavedTheme());
+        document.getElementById('dark-mode-toggle').addEventListener('click', toggleTheme);
+    </script>
 
     <script>
         let audioContext;
@@ -158,6 +479,7 @@
         const modulationDepthSlider = document.getElementById('modulationDepth');
         const volumeSlider = document.getElementById('volume');
         const toggleBtn = document.getElementById('toggleBtn');
+        const resetBtn = document.getElementById('resetBtn');
 
         const freqDisplay = document.getElementById('freqDisplay');
         const modRateDisplay = document.getElementById('modRateDisplay');
@@ -192,6 +514,36 @@
                 startWarbleTone();
             }
         });
+
+        // Default values for each control
+        const DEFAULTS = {
+            frequency: 1000,
+            modulationRate: 5,
+            modulationDepth: 15,
+            volume: 30
+        };
+
+        function resetControls() {
+            frequencySlider.value = DEFAULTS.frequency;
+            modulationRateSlider.value = DEFAULTS.modulationRate;
+            modulationDepthSlider.value = DEFAULTS.modulationDepth;
+            volumeSlider.value = DEFAULTS.volume;
+
+            freqDisplay.textContent = DEFAULTS.frequency + ' Hz';
+            modRateDisplay.textContent = DEFAULTS.modulationRate + ' Hz';
+            modDepthDisplay.textContent = DEFAULTS.modulationDepth + '%';
+            volumeDisplay.textContent = DEFAULTS.volume + '%';
+
+            // Update the live tone if it's currently playing
+            if (isPlaying) {
+                updateFrequency();
+                updateModulationRate();
+                updateModulationDepth();
+                updateVolume();
+            }
+        }
+
+        resetBtn.addEventListener('click', resetControls);
 
         async function startWarbleTone() {
             if (!audioContext) {
@@ -241,7 +593,7 @@
 
             isPlaying = true;
             toggleBtn.textContent = '■ Stop Warble Tone';
-            toggleBtn.className = 'stop-btn';
+            toggleBtn.classList.add('stop-btn');
         }
 
         function stopWarbleTone() {
@@ -255,7 +607,7 @@
             }
             isPlaying = false;
             toggleBtn.textContent = '▶ Start Warble Tone';
-            toggleBtn.className = 'start-btn';
+            toggleBtn.classList.remove('stop-btn');
         }
 
         function updateFrequency() {
