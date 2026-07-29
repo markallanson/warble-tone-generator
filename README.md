@@ -25,18 +25,21 @@ another family prepare the same way.
 
 ## Usage
 
-1. Open [`index.html`](index.html) directly in a web browser — double-click it, or use:
-   ```bash
-   # Option A: just open the file
-   xdg-open index.html      # Linux
-   open index.html          # macOS
+**👉 Try it online at <https://warble.allanson.org>** — no install required.
 
-   # Option B: serve it locally
-   python3 -m http.server 8000
-   # then visit http://localhost:8000
-   ```
-2. Set the desired frequency, warble rate, depth, and volume.
-3. Press **▶ Start Warble Tone**. Adjust controls while it plays. Press **■ Stop** when done.
+Or run it locally by opening [`index.html`](index.html) directly in a web browser — double-click it, or use:
+```bash
+# Option A: just open the file
+xdg-open index.html      # Linux
+open index.html          # macOS
+
+# Option B: serve it locally
+python3 -m http.server 8000
+# then visit http://localhost:8000
+```
+
+Then set the desired frequency, warble rate, depth, and volume, press
+**▶ Start Warble Tone**, and press **■ Stop** when done.
 
 > **Browser autoplay policy:** the tone starts on a button click, which satisfies
 > browsers' requirement for a user gesture before audio can play.
