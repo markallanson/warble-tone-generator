@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Warble Tone Generator for Audiometry</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .control-group {
+            margin: 20px 0;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        input[type="range"] {
+            width: 100%;
+            margin: 10px 0;
+        }
+        .value-display {
+            text-align: center;
+            font-size: 18px;
+            color: #2c3e50;
+            margin: 5px 0;
+        }
+        button {
+            width: 100%;
+            padding: 15px;
+            font-size: 18px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 0;
+            transition: background-color 0.3s;
+        }
+        .start-btn {
+            background-color: #27ae60;
+            color: white;
+        }
+        .start-btn:hover {
+            background-color: #229954;
+        }
+        .stop-btn {
+            background-color: #e74c3c;
+            color: white;
+        }
+        .stop-btn:hover {
+            background-color: #c0392b;
+        }
+        .stop-btn:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
+        }
+        .info {
+            background-color: #e8f4f8;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+            font-size: 14px;
+            color: #555;
+        }
+        .warning {
+            background-color: #fff3cd;
+            border: 1px solid #ffc107;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            color: #856404;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Warble Tone Generator</h1>
+        
+        <div class="warning">
+            ⚠️ <strong>Warning:</strong> Use at safe volumes. Do not use for self-diagnosis. Clinical audiometry should be performed by qualified professionals.
+        </div>
+
+        <div class="control-group">
+            <label for="frequency">Center Frequency (Hz)</label>
+            <input type="range" id="frequency" min="125" max="8000" value="1000" step="1">
+            <div class="value-display" id="freqDisplay">1000 Hz</div>
+        </div>
+
+        <div class="control-group">
+            <label for="modulationRate">Warble Rate (Hz)</label>
+            <input type="range" id="modulationRate" min="3" max="10" value="5" step="0.5">
+            <div class="value-display" id="modRateDisplay">5 Hz</div>
+        </div>
+
+        <div class="control-group">
+            <label for="modulationDepth">Warble Depth (%)</label>
+            <input type="range" id="modulationDepth" min="5" max="25" value="15" step="1">
+            <div class="value-display" id="modDepthDisplay">15%</div>
+        </div>
+
+        <div class="control-group">
+            <label for="volume">Volume</label>
+            <input type="range" id="volume" min="0" max="100" value="30" step="1">
+            <div class="value-display" id="volumeDisplay">30%</div>
+        </div>
+
+        <button class="start-btn" id="toggleBtn">▶ Start Warble Tone</button>
+
+        <div class="info">
+            <strong>About Warble Tones:</strong><br>
+            Warble tones are frequency-modulated pure tones used in sound field audiometry. The frequency varies around a center frequency to minimize standing wave effects in the test environment. Typical warble rates are 4-6 Hz with modulation depths of 10-20%.
+        </div>
+    </div>
+
+    <script>
+        let audioContext;
+        let oscillator;
+        let modulatorOscillator;
+        let gainNode;
+        let modulatorGain;
+        let isPlaying = false;
+
+        const frequencySlider = document.getElementById('frequency');
+        const modulationRateSlider = document.getElementById('modulationRate');
+        const modulationDepthSlider = document.getElementById('modulationDepth');
+        const volumeSlider = document.getElementById('volume');
+        const toggleBtn = document.getElementById('toggleBtn');
+
+        const freqDisplay = document.getElementById('freqDisplay');
+        const modRateDisplay = document.getElementById('modRateDisplay');
+        const modDepthDisplay = document.getElementById('modDepthDisplay');
+        const volumeDisplay = document.getElementById('volumeDisplay');
+
+        // Update displays
+        frequencySlider.addEventListener('input', (e) => {
+            freqDisplay.textContent = e.target.value + ' Hz';
+            if (isPlaying) updateFrequency();
+        });
+
+        modulationRateSlider.addEventListener('input', (e) => {
+            modRateDisplay.textContent = e.target.value + ' Hz';
+            if (isPlaying) updateModulationRate();
+        });
+
+        modulationDepthSlider.addEventListener('input', (e) => {
+            modDepthDisplay.textContent = e.target.value + '%';
+            if (isPlaying) updateModulationDepth();
+        });
+
+        volumeSlider.addEventListener('input', (e) => {
+            volumeDisplay.textContent = e.target.value + '%';
+            if (isPlaying) updateVolume();
+        });
+
+        toggleBtn.addEventListener('click', () => {
+            if (isPlaying) {
+                stopWarbleTone();
+            } else {
+                startWarbleTone();
+            }
+        });
+
+        async function startWarbleTone() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+
+            // Resume audio context if it's suspended (required by browser autoplay policies)
+            if (audioContext.state === 'suspended') {
+                await audioContext.resume();
+            }
+
+            const centerFreq = parseFloat(frequencySlider.value);
+            const modRate = parseFloat(modulationRateSlider.value);
+            const modDepth = parseFloat(modulationDepthSlider.value) / 100;
+            const volume = parseFloat(volumeSlider.value) / 100;
+
+            // Create main oscillator (carrier)
+            oscillator = audioContext.createOscillator();
+            oscillator.type = 'sine';
+            oscillator.frequency.value = centerFreq;
+
+            // Create modulator oscillator (LFO for frequency modulation)
+            modulatorOscillator = audioContext.createOscillator();
+            modulatorOscillator.type = 'sine';
+            modulatorOscillator.frequency.value = modRate;
+
+            // Create gain for modulator
+            modulatorGain = audioContext.createGain();
+            modulatorGain.gain.value = centerFreq * modDepth;
+
+            // Create main gain node for volume control
+            gainNode = audioContext.createGain();
+            gainNode.gain.value = volume * 0.5; // Scale to reasonable volume
+
+            // Connect modulator: modulatorOsc -> modulatorGain -> carrier frequency
+            modulatorOscillator.connect(modulatorGain);
+            modulatorGain.connect(oscillator.frequency);
+
+            // Connect carrier: oscillator -> gainNode -> destination
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            // Start oscillators
+            const currentTime = audioContext.currentTime;
+            oscillator.start(currentTime);
+            modulatorOscillator.start(currentTime);
+
+            isPlaying = true;
+            toggleBtn.textContent = '■ Stop Warble Tone';
+            toggleBtn.className = 'stop-btn';
+        }
+
+        function stopWarbleTone() {
+            if (oscillator) {
+                oscillator.stop();
+                oscillator = null;
+            }
+            if (modulatorOscillator) {
+                modulatorOscillator.stop();
+                modulatorOscillator = null;
+            }
+            isPlaying = false;
+            toggleBtn.textContent = '▶ Start Warble Tone';
+            toggleBtn.className = 'start-btn';
+        }
+
+        function updateFrequency() {
+            const centerFreq = parseFloat(frequencySlider.value);
+            const modDepth = parseFloat(modulationDepthSlider.value) / 100;
+            oscillator.frequency.value = centerFreq;
+            modulatorGain.gain.value = centerFreq * modDepth;
+        }
+
+        function updateModulationRate() {
+            const modRate = parseFloat(modulationRateSlider.value);
+            modulatorOscillator.frequency.value = modRate;
+        }
+
+        function updateModulationDepth() {
+            const centerFreq = parseFloat(frequencySlider.value);
+            const modDepth = parseFloat(modulationDepthSlider.value) / 100;
+            modulatorGain.gain.value = centerFreq * modDepth;
+        }
+
+        function updateVolume() {
+            const volume = parseFloat(volumeSlider.value) / 100;
+            gainNode.gain.value = volume * 0.5;
+        }
+    </script>
+</body>
+</html>
